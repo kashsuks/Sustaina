@@ -1,3 +1,5 @@
+![Logo](https://github.com/kashsuks/Sustaina/blob/7fa904ba090a71971992ffeff5a298209fba2248/logo.png)
+
 # Sustaina
 
 A desktop app that aims to combat unsustainable clothing purchases
@@ -13,6 +15,11 @@ The purpose of this project is to make users more aware of sustainable clothing 
 - Cross device access
     - By using a database, multiple users are able to contribute
 - Uploading and searching for clothes
+
+
+## License
+
+This project uses the [MIT](https://choosealicense.com/licenses/mit/) license
 
 
 ## Environment Variables
@@ -54,3 +61,10 @@ python3 main.py
 ## Authors
 
 - [@kashuks](https://www.github.com/kashsuks)
+
+
+## Tech Stack
+
+**Client:** Python3, Tkinter, Psycopg2
+
+**Database:** PostgreSQL hosted on [Render](https://render.com/)
