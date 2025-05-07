@@ -5,8 +5,11 @@ import time
 import math
 import psycopg2
 import os
+from dotenv import load_dotenv
 from typing import *
 
+
+load_dotenv()
 
 class iPhoneStartupAnimation:
     def __init__(self, root):
@@ -43,7 +46,8 @@ class iPhoneStartupAnimation:
         """Connect to the database"""
         try:
             databaseURL = os.getenv("DATABASE_URL")
-            self.conn = psycopg2.connect(databaseURL)
+            print(databaseURL)
+            self.conn = psycopg2.connect(databaseURL, sslmode='require')
             self.cur = self.conn.cursor()
             self.createTable()
         except Exception as e:
