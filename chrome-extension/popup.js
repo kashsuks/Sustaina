@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const analyzeBtn = document.getElementById('analyze-btn');
     
     function analyzeCurrentPage() {
+      /** 
+       * Analyze the current page for clothing product information.
+        */      
       statusEl.className = 'status loading';
       statusEl.textContent = 'Analyzing current page...';
       productInfoEl.style.display = 'none';
