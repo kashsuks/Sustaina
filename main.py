@@ -46,7 +46,6 @@ class iPhoneStartupAnimation:
         """Connect to the database"""
         try:
             databaseURL = os.getenv("DATABASE_URL")
-            print(databaseURL)
             self.conn = psycopg2.connect(databaseURL, sslmode='require')
             self.cur = self.conn.cursor()
             self.createTable()
