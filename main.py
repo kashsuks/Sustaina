@@ -13,6 +13,7 @@ load_dotenv()
 
 class iPhoneStartupAnimation:
     def __init__(self, root):
+        self.loggedInUser = None
         self.root = root
         
         self.root.title("Sustaina")
@@ -63,7 +64,97 @@ class iPhoneStartupAnimation:
                 imagePath TEXT
             )
         ''')
+        self.cur.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                description TEXT,
+                imagePath TEXT
+            )
+        ''')
         self.conn.commit()
+        
+    def showLoginScreen(self):
+        """Show login screen"""
+        self.clearContent()
+        frame = tk.Frame(self.mainContent, bg=self.bgColor)
+        frame.pack(pady=50)
+
+        tk.Label(frame, text="Login", font=("SF Pro", 20, "bold"), bg=self.bgColor).pack(pady=10)
+        
+        self.login_username = tk.StringVar()
+        self.login_password = tk.StringVar()
+
+        tk.Entry(frame, textvariable=self.login_username, font=("SF Pro", 14), width=30).pack(pady=5)
+        tk.Entry(frame, textvariable=self.login_password, font=("SF Pro", 14), width=30, show="*").pack(pady=5)
+
+        tk.Button(frame, text="Login", command=self.handleLogin, bg=self.accentColor, fg="white").pack(pady=10)
+        tk.Button(frame, text="Sign Up", command=self.showSignupScreen, fg=self.textColor).pack()
+
+    def showSignupScreen(self):
+        """Show signup screen"""
+        self.clearContent()
+        frame = tk.Frame(self.mainContent, bg=self.bgColor)
+        frame.pack(pady=50)
+
+        tk.Label(frame, text="Sign Up", font=("SF Pro", 20, "bold"), bg=self.bgColor).pack(pady=10)
+
+        self.signup_username = tk.StringVar()
+        self.signup_password = tk.StringVar()
+        self.signup_description = tk.StringVar()
+
+        tk.Entry(frame, textvariable=self.signup_username, font=("SF Pro", 14), width=30).pack(pady=5)
+        tk.Entry(frame, textvariable=self.signup_password, font=("SF Pro", 14), width=30, show="*").pack(pady=5)
+        tk.Entry(frame, textvariable=self.signup_description, font=("SF Pro", 14), width=30).pack(pady=5)
+
+        tk.Button(frame, text="Sign Up", command=self.handleSignup, bg=self.accentColor, fg="white").pack(pady=10)
+        tk.Button(frame, text="Back to Login", command=self.showLoginScreen, fg=self.textColor).pack()
+
+    def handleLogin(self):
+        username = self.login_username.get()
+        password = self.login_password.get()
+        if self.login(username, password):
+            self.showMainInterface()
+        else:
+            tk.messagebox.showerror("Error", "Invalid credentials")
+
+    def handleSignup(self):
+        username = self.signup_username.get()
+        password = self.signup_password.get()
+        description = self.signup_description.get()
+        if not username or not password:
+            tk.messagebox.showerror("Error", "Username and Password are required")
+            return
+        if self.signup(username, password, description):
+            tk.messagebox.showinfo("Success", "Account created successfully!")
+            self.showLoginScreen()
+        else:
+            tk.messagebox.showerror("Error", "Username already exists")
+        
+    def signup(self, username, password, description="", imagePath=""):
+        try:
+            self.cur.execute("INSERT INTO users (username, password, description, imagePath) VALUES (%s, %s, %s, %s)",
+                            (username, password, description, imagePath))
+            self.conn.commit()
+            return True
+        except Exception as e:
+            print("Signup error:", e)
+            return False
+
+    def login(self, username, password):
+        self.cur.execute("SELECT * FROM users WHERE username=%s AND password=%s", (username, password))
+        user = self.cur.fetchone()
+        if user:
+            self.loggedInUser = {
+                "id": user[0],
+                "username": user[1],
+                "description": user[3],
+                "imagePath": user[4]
+            }
+            return True
+        return False
+
 
     def startAnimation(self) -> None:
         """Starts the animation process"""
@@ -292,17 +383,13 @@ class iPhoneStartupAnimation:
         self.addAnimation(animateText, 45)
 
     def showMainInterface(self) -> None:
-        """Showe the main interface"""
         self.animationCanvas.delete("all")
         self.createStatusBar()
         self.createHomeIndicator()
         self.createBottomNav()
         self.updateTime()
-
-        # main content
         self.mainContent = tk.Frame(self.mainFrame, bg=self.bgColor)
         self.mainContent.place(x=0, y=45, width=self.width, height=self.height - 125)
-
         self.showHomeTab()
 
     # ui components
@@ -427,6 +514,11 @@ class iPhoneStartupAnimation:
 
         self.switchTab(index)
         self.animateTabSelection(index)
+        
+    def uploadImage(self) -> str:
+        filetypes = [('Image Files', '*.png *.jpg *.jpeg *.gif')]
+        filepath = filedialog.askopenfilename(title='Choose Image', filetypes=filetypes)
+        return filepath
 
     def switchTab(self, index: int) -> None:
         """Switches the tab
@@ -531,13 +623,46 @@ class iPhoneStartupAnimation:
         label = tk.Label(self.mainContent, text="Welcome to Sustaina!", font=("SF Pro", 18), bg=self.bgColor,
                          fg=self.textColor)
         label.pack(pady=20)
+        
+    def showProfileTab(self):
+        self.clearContent()
+        frame = tk.Frame(self.mainContent, bg=self.bgColor)
+        frame.pack(fill=tk.BOTH, expand=True)
 
-    def showProfileTab(self) -> None:
-        """_summary_
-        """
-        label = tk.Label(self.mainContent, text="Your Profile", font=("SF Pro", 18), bg=self.bgColor,
-                         fg=self.textColor)
-        label.pack(pady=20)
+        if not self.loggedInUser:
+            tk.Label(frame, text="You're not logged in.", font=("SF Pro", 16), bg=self.bgColor).pack(pady=20)
+            tk.Button(frame, text="Login", command=self.showLoginScreen, bg=self.accentColor, fg="white").pack()
+            return
+
+        tk.Label(frame, text=f"Username: {self.loggedInUser['username']}", font=("SF Pro", 16), bg=self.bgColor).pack(pady=10)
+        tk.Label(frame, text=f"Description: {self.loggedInUser['description'] or 'N/A'}", bg=self.bgColor).pack(pady=5)
+
+        if self.loggedInUser['imagePath']:
+            try:
+                img = tk.PhotoImage(file=self.loggedInUser['imagePath'])
+                imgLabel = tk.Label(frame, image=img, bg=self.bgColor)
+                imgLabel.image = img  # Keep reference
+                imgLabel.pack(pady=10)
+            except Exception as e:
+                tk.Label(frame, text="Error loading profile image", fg="red", bg=self.bgColor).pack()
+        else:
+            tk.Label(frame, text="No profile picture set", bg=self.bgColor).pack()
+
+        def chngProfilePic():
+            path = self.uploadImage()
+            if path:
+                self.cur.execute("UPDATE users SET imagePath=%s WHERE id=%s", (path, self.loggedInUser['id']))
+                self.conn.commit()
+                self.loggedInUser['imagePath'] = path
+                self.showProfileTab()
+
+        tk.Button(frame, text="Change Profile Picture", command=chngProfilePic, bg="#50C878", fg="white").pack(pady=10)
+        tk.Button(frame, text="Logout", command=self.logout, bg="#FF6347", fg="white").pack(pady=5)
+
+    def logout(self):
+        self.loggedInUser = None
+        self.showLoginScreen()
+        
 
     def uploadImage(self) -> str:
         """Uplad the image
@@ -646,6 +771,7 @@ class iPhoneStartupAnimation:
             print("Search error:", e)
 
 
+#driver code
 if __name__ == "__main__":
     root = tk.Tk()
     app = iPhoneStartupAnimation(root)
