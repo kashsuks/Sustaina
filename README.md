@@ -49,7 +49,7 @@ cd sustaina
 3) Install dependencies
  
 ```bash
-pip3 install -r requirements.txy
+pip3 install -r requirements.txt
 ```
  
 4) Run the file
