@@ -44,7 +44,9 @@ class iPhoneStartupAnimation:
 
     # connect to the database
     def DBConnection(self) -> None:
-        """Connect to the database"""
+        """
+        Connect to the database
+        """
         try:
             databaseURL = os.getenv("DATABASE_URL")
             self.conn = psycopg2.connect(databaseURL, sslmode='require')
@@ -552,7 +554,7 @@ class iPhoneStartupAnimation:
         if not iconCanvas:
             return
 
-        def animate(frame, maxFrames: int) -> None:
+        def animate(frame: int, maxFrames: int) -> None:
             """Animates the tab selection
 
             Args:
@@ -590,7 +592,7 @@ class iPhoneStartupAnimation:
         """Converts the hex code to rgb
 
         Args:
-            hexColor (string): _description_
+            hexColor (string): the hex color code
 
         Returns:
             Tuple: The tuple of the rgb values
