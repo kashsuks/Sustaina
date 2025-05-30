@@ -32,6 +32,12 @@ To run this project, you will need to add the following environment variable to 
 This Database URL is the external URL under your online deployement
  
 **To use the shared/universal URL, please contact email: ksukshavasi@gmail.com with the Subject: Sustaina DB URL**
+
+## Requirements
+- **Python 3.8+**
+- **Pip package manager**
+- **Web Browser**
+
 ## Run Locally (For the Client Sided App)
  
 1)  Clone the project
@@ -92,3 +98,7 @@ git clone https://kashsuks/sustaina
     - For example, if you change the Database URL in the `.env` file, it still uses the old one
     - **The fix**
         - Use `unset DATABASE_URL` in the terminal in the same directory and the root of the project
+
+- The Database is a free 30 day instance of Render DB running PostrgeSQL meaning, after 1 month, the DB will expire
+    - **The Fix**
+        - Get a new instance of your database from [Render](https://render.com/) and use its `External Database URL`
