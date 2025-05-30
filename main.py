@@ -1,3 +1,10 @@
+""" 
+Kashyap Sukshavasi (@kashsuks)
+Sustaina - Mobile App built using Python and Tkinter
+This is a mobile app that helps users track their clothing sustainability.
+May 30, 2025
+"""
+
 # Imports
 import tkinter as tk
 from tkinter import ttk, filedialog
@@ -46,6 +53,11 @@ class iPhoneStartupAnimation:
     def DBConnection(self) -> None:
         """
         Connect to the database
+        
+        Args:
+            None
+        Returns:
+            None
         """
         try:
             databaseURL = os.getenv("DATABASE_URL")
@@ -56,7 +68,13 @@ class iPhoneStartupAnimation:
             print("Database connection error:", e)
 
     def createTable(self) -> None:
-        """Creates the table to organize the data"""
+        """
+        Create the necessary tables in the database
+        Args:
+            None
+        Returns:
+            None
+        """
         self.cur.execute('''
             CREATE TABLE IF NOT EXISTS clothes (
                 id SERIAL PRIMARY KEY,
@@ -78,53 +96,79 @@ class iPhoneStartupAnimation:
         self.conn.commit()
         
     def showLoginScreen(self):
-        """Show login screen"""
+        """
+        Show login screen
+        Args:
+            None
+        Returns:
+            None
+        """
         self.clearContent()
         frame = tk.Frame(self.mainContent, bg=self.bgColor)
         frame.pack(pady=50)
 
         tk.Label(frame, text="Login", font=("SF Pro", 20, "bold"), bg=self.bgColor).pack(pady=10)
         
-        self.login_username = tk.StringVar()
-        self.login_password = tk.StringVar()
+        self.loginUsername = tk.StringVar()
+        self.loginPWD = tk.StringVar()
 
-        tk.Entry(frame, textvariable=self.login_username, font=("SF Pro", 14), width=30).pack(pady=5)
-        tk.Entry(frame, textvariable=self.login_password, font=("SF Pro", 14), width=30, show="*").pack(pady=5)
+        tk.Entry(frame, textvariable=self.loginUsername, font=("SF Pro", 14), width=30).pack(pady=5)
+        tk.Entry(frame, textvariable=self.loginPWD, font=("SF Pro", 14), width=30, show="*").pack(pady=5)
 
         tk.Button(frame, text="Login", command=self.handleLogin, bg=self.accentColor, fg="white").pack(pady=10)
         tk.Button(frame, text="Sign Up", command=self.showSignupScreen, fg=self.textColor).pack()
 
     def showSignupScreen(self):
-        """Show signup screen"""
+        """
+        Show signup screen
+        Args:
+            None
+        Returns:
+            None
+        """
         self.clearContent()
         frame = tk.Frame(self.mainContent, bg=self.bgColor)
         frame.pack(pady=50)
 
         tk.Label(frame, text="Sign Up", font=("SF Pro", 20, "bold"), bg=self.bgColor).pack(pady=10)
 
-        self.signup_username = tk.StringVar()
-        self.signup_password = tk.StringVar()
-        self.signup_description = tk.StringVar()
+        self.signupUsername = tk.StringVar()
+        self.signupPWD = tk.StringVar()
+        self.signupDesc = tk.StringVar()
 
-        tk.Entry(frame, textvariable=self.signup_username, font=("SF Pro", 14), width=30).pack(pady=5)
-        tk.Entry(frame, textvariable=self.signup_password, font=("SF Pro", 14), width=30, show="*").pack(pady=5)
-        tk.Entry(frame, textvariable=self.signup_description, font=("SF Pro", 14), width=30).pack(pady=5)
+        tk.Entry(frame, textvariable=self.signupUsername, font=("SF Pro", 14), width=30).pack(pady=5)
+        tk.Entry(frame, textvariable=self.signupPWD, font=("SF Pro", 14), width=30, show="*").pack(pady=5)
+        tk.Entry(frame, textvariable=self.signupDesc, font=("SF Pro", 14), width=30).pack(pady=5)
 
         tk.Button(frame, text="Sign Up", command=self.handleSignup, bg=self.accentColor, fg="white").pack(pady=10)
         tk.Button(frame, text="Back to Login", command=self.showLoginScreen, fg=self.textColor).pack()
 
     def handleLogin(self):
-        username = self.login_username.get()
-        password = self.login_password.get()
+        """
+        Handles the login process
+        Args:
+            None
+        Returns:
+            None
+        """
+        username = self.loginUsername.get()
+        password = self.loginPWD.get()
         if self.login(username, password):
             self.showMainInterface()
         else:
             tk.messagebox.showerror("Error", "Invalid credentials")
 
     def handleSignup(self):
-        username = self.signup_username.get()
-        password = self.signup_password.get()
-        description = self.signup_description.get()
+        """
+        Handles the signup process
+        Args:
+            None
+        Returns:
+            None
+        """
+        username = self.signupUsername.get()
+        password = self.signupPWD.get()
+        description = self.signupDesc.get()
         if not username or not password:
             tk.messagebox.showerror("Error", "Username and Password are required")
             return
@@ -134,17 +178,39 @@ class iPhoneStartupAnimation:
         else:
             tk.messagebox.showerror("Error", "Username already exists")
         
-    def signup(self, username, password, description="", imagePath=""):
+    def signup(self, username: str, password: str, description: str ="", imagePath: str ="") -> bool:
+        """Handles the SQL for signing up a user
+
+        Args:
+            username (str): The username of the user
+            password (str): Users password
+            description (str, optional): Description about themselves. Defaults to "".
+            imagePath (str, optional): Profile picture path. Defaults to "".
+
+        Returns:
+            status (bool): Status of the signup operation
+        """
+        status = None
         try:
             self.cur.execute("INSERT INTO users (username, password, description, imagePath) VALUES (%s, %s, %s, %s)",
                             (username, password, description, imagePath))
             self.conn.commit()
-            return True
+            return status
         except Exception as e:
             print("Signup error:", e)
-            return False
+            return status
 
-    def login(self, username, password):
+    def login(self, username: str, password: str) -> bool:
+        """Handles the SQL for logging in a user
+
+        Args:
+            username (str): The username of the user
+            password (str): User's passowrd
+
+        Returns:
+            status (bool): Status of the login operation
+        """
+        status = False
         self.cur.execute("SELECT * FROM users WHERE username=%s AND password=%s", (username, password))
         user = self.cur.fetchone()
         if user:
@@ -154,17 +220,29 @@ class iPhoneStartupAnimation:
                 "description": user[3],
                 "imagePath": user[4]
             }
-            return True
-        return False
+            status = True
+        return status
 
 
     def startAnimation(self) -> None:
-        """Starts the animation process"""
+        """
+        Starts the leaf animation
+        Args:
+            None
+        Returns:
+            None
+        """
         self.drawLeafAnimation()
         self.processAnims()
 
     def processAnims(self) -> None:
-        """Processes the animations"""
+        """
+        Processes the animations in the queue
+        Args:
+            None
+        Returns:
+            None
+        """
         if self.animations:
             removeAnims = []
             for animation in self.animations:
@@ -178,7 +256,13 @@ class iPhoneStartupAnimation:
             self.root.after(16, self.processAnims)
 
     def drawLeafAnimation(self) -> None:
-        """Draws the leaf animation"""
+        """
+        Draws the leaf animation
+        Args:
+            None
+        Returns:
+            None
+        """
         leafColor = self.accentColor
         leafSize = 80
         centerX = self.width // 2
@@ -198,6 +282,8 @@ class iPhoneStartupAnimation:
             Args:
                 frame (int): The current frame
                 maxFrames (int): The maximum frames
+            Returns:
+                None
             """
             nonlocal leafOutline
             if leafOutline:
@@ -218,6 +304,8 @@ class iPhoneStartupAnimation:
 
         Args:
             leafSize (int): The size of the leaf (80)
+        Returns:
+            None
         """
         centerX = self.width // 2
         centerY = self.height // 2 - 50
@@ -229,12 +317,14 @@ class iPhoneStartupAnimation:
             Args:
                 frame (int): Current frame
                 maxFrames (int): Maximum frame
+            Returns:
+                None
             """
             nonlocal leafPolygon
             if leafPolygon:
                 self.animationCanvas.delete(leafPolygon)
             progress = frame / maxFrames
-            fillColor = self.hex_to_rgb(self.accentColor)
+            fillColor = self.hexToRGB(self.accentColor)
             alpha = int(255 * progress)
             fillColorWithAlpha = f"#{fillColor[0]:02x}{fillColor[1]:02x}{fillColor[2]:02x}"
             points = []
@@ -252,7 +342,13 @@ class iPhoneStartupAnimation:
         self.addAnimation(animateLeafFilling, 30)
 
     def animateShirt(self) -> None:
-        """Animate the shirt"""
+        """
+        Animate the shirt drawing
+        Args:
+            None
+        Returns:
+            None
+        """
         centerX = self.width // 2
         centerY = self.height // 2 + 50
         shirtWidth = 100
@@ -276,6 +372,8 @@ class iPhoneStartupAnimation:
             Args:
                 frame (int): Current frame
                 maxFrames (int): The maximum frame
+            Returns:
+                None
             """
             nonlocal shirtOutline
             if shirtOutline:
@@ -304,7 +402,13 @@ class iPhoneStartupAnimation:
         self.addAnimation(animateShirtDraw, 60)
 
     def animateShirtFill(self) -> None:
-        """Fill the shirt in"""
+        """
+        Animate the filling of the shirt
+        Args:
+            None
+        Returns:
+            None
+        """
         centerX = self.width // 2
         centerY = self.height // 2 + 50
         shirtWidth = 100
@@ -341,11 +445,13 @@ class iPhoneStartupAnimation:
             Args:
                 frame (int): The current fram
                 maxFrames (int): The maximum frame
+            Returns:
+                None
             """
             nonlocal shirtPolygon
             if shirtPolygon:
                 self.animationCanvas.delete(shirtPolygon)
-            fillColor = self.hex_to_rgb("#007AFF")
+            fillColor = self.hexToRGB("#007AFF")
             fillColorWithAlpha = f"#{fillColor[0]:02x}{fillColor[1]:02x}{fillColor[2]:02x}"
             shirtPolygon = self.animationCanvas.create_polygon(
                 shirtPoints, fill=fillColorWithAlpha, outline="#007AFF", width=2, smooth=True
@@ -355,7 +461,12 @@ class iPhoneStartupAnimation:
         self.addAnimation(animateShirtFilling, 30)
 
     def animateTextAppear(self) ->  None:
-        """Animate the text appearing"""
+        """Animate the text appearing
+        Args:
+            None
+        Returns:
+            None
+        """
         centerX = self.width // 2
         centerY = self.height // 2 + 150
         textObject = None
@@ -366,6 +477,8 @@ class iPhoneStartupAnimation:
             Args:
                 frame (int): The current frame
                 maxFrames (int): The maximum frame
+            Returns:
+                None
             """
             nonlocal textObject
             if textObject:
@@ -385,6 +498,14 @@ class iPhoneStartupAnimation:
         self.addAnimation(animateText, 45)
 
     def showMainInterface(self) -> None:
+        """
+        Show the main interface after the animation is done
+        Args:
+            None
+        Returns:
+            None
+        """
+        
         self.animationCanvas.delete("all")
         self.createStatusBar()
         self.createHomeIndicator()
@@ -396,7 +517,13 @@ class iPhoneStartupAnimation:
 
     # ui components
     def createStatusBar(self) -> None:
-        """Create the status bar"""
+        """
+        Creates the status bar
+        Args:
+            None
+        Returns:
+            None
+        """
         self.statusBar = tk.Frame(self.mainFrame, bg=self.bgColor, height=45)
         self.statusBar.place(x=0, y=0, width=self.width)
         self.timeLabel = tk.Label(self.statusBar, text="9:41", font=("SF Pro", 14, "bold"), bg=self.bgColor,
@@ -425,23 +552,36 @@ class iPhoneStartupAnimation:
                                        start=45, extent=90, style="arc", outline=self.textColor, width=2)
 
     def createHomeIndicator(self) -> None:
-        """Home indicator"""
+        """
+        Creates the home indicator
+        Args:
+            None
+        Returns:
+            None"""
         self.homeIndicator = tk.Frame(self.mainFrame, bg=self.textColor, height=5, width=120)
         self.homeIndicator.place(x=self.width // 2, y=self.height - 10, anchor="center")
         self.homeIndicator.config(bd=0, relief=tk.FLAT)
         self.homeIndicator.bind("<Button-1>", self.homeIndicatorPressed)
 
     def homeIndicatorPressed(self, event) -> None:
-        """Is the home indicator pressed
+        """
+        Is the home indicator pressed
 
         Args:
             event (Any): The data passed by the tkinter event
+        Returns:
+            None
         """
-        print(event)
         self.animateHomeIndicator()
 
     def animateHomeIndicator(self) -> None:
-        """Home indicator animation"""
+        """
+        Animate the home indicator
+        Args:
+            None
+        Returns:
+            None
+        """
         initialWidth = 120
         targetWidth = 140
 
@@ -458,7 +598,13 @@ class iPhoneStartupAnimation:
         animate(0, 15)
 
     def createBottomNav(self) -> None:
-        """Bottom navigation bar"""
+        """
+        Creates the bottom navigation bar
+        Args:
+            None
+        Returns:
+            None
+        """
         self.bottomNav = tk.Frame(self.mainFrame, bg="#F2F2F7", height=80)
         self.bottomNav.place(x=0, y=self.height - 80, width=self.width)
         navItems = ["Home", "Search", "Upload", "Profile"]
@@ -492,10 +638,13 @@ class iPhoneStartupAnimation:
             itemLabel.bind("<Button-1>", lambda e, idx=i: self.tabPressed(idx))
 
     def tabPressed(self, index: int) -> None:
-        """Choose the tab pressed
+        """
+        Choose the tab pressed
 
         Args:
             index (int): The index of the tab pressed
+        Returns:
+            None
         """
         for i, tabFrame in enumerate(self.tabFrames):
             iconCanvas = None
@@ -518,6 +667,13 @@ class iPhoneStartupAnimation:
         self.animateTabSelection(index)
         
     def uploadImage(self) -> str:
+        """
+        Uploads the image
+        Args:
+            None
+        Returns:
+            filepath (str): The file path of the image
+        """
         filetypes = [('Image Files', '*.png *.jpg *.jpeg *.gif')]
         filepath = filedialog.askopenfilename(title='Choose Image', filetypes=filetypes)
         return filepath
@@ -527,6 +683,8 @@ class iPhoneStartupAnimation:
 
         Args:
             index (int): The current index of the tab
+        Returns:
+            None
         """
         self.clearContent()
         if index == 0:
@@ -543,6 +701,8 @@ class iPhoneStartupAnimation:
 
         Args:
             index (int): The index of the tab
+        Returns:
+            None
         """
         frames = 10
         tabFrame = self.tabFrames[index]
@@ -560,6 +720,8 @@ class iPhoneStartupAnimation:
             Args:
                 frame (int): The current frame
                 maxFrames (int): The maximum frames
+            Returns:
+                None
             """
             progress = frame / maxFrames
             if progress <= 0.5:
@@ -580,7 +742,12 @@ class iPhoneStartupAnimation:
         animate(0, frames)
 
     def updateTime(self) -> None:
-        """_summary_
+        """
+        Updated the time every minute
+        Args:
+            None
+        Returns:
+            None
         """
         currentTime = time.strftime("%I:%M")
         if currentTime.startswith("0"):
@@ -588,8 +755,9 @@ class iPhoneStartupAnimation:
         self.timeLabel.config(text=currentTime)
         self.root.after(1000, self.updateTime)
 
-    def hex_to_rgb(self, hexColor: str) -> Tuple[int, int, int]:
-        """Converts the hex code to rgb
+    def hexToRGB(self, hexColor: str) -> Tuple[int, int, int]:
+        """
+        Converts the hex code to rgb
 
         Args:
             hexColor (string): the hex color code
@@ -614,19 +782,36 @@ class iPhoneStartupAnimation:
         })
 
     def clearContent(self) -> None:
-        """Clears the content of the main content area
+        """
+        Clears the content of the main content area
+        Args:
+            None
+        Returns:
+            None
         """
         for widget in self.mainContent.winfo_children():
             widget.destroy()
 
     def showHomeTab(self) -> None:
-        """_summary_
+        """
+        Show the home tab contents
+        Args:
+            None
+        Returns:
+            None
         """
         label = tk.Label(self.mainContent, text="Welcome to Sustaina!", font=("SF Pro", 18), bg=self.bgColor,
                          fg=self.textColor)
         label.pack(pady=20)
         
     def showProfileTab(self):
+        """
+        Show the profile tab contents
+        Args:
+            None
+        Returns:
+            None
+        """
         self.clearContent()
         frame = tk.Frame(self.mainContent, bg=self.bgColor)
         frame.pack(fill=tk.BOTH, expand=True)
@@ -651,6 +836,13 @@ class iPhoneStartupAnimation:
             tk.Label(frame, text="No profile picture set", bg=self.bgColor).pack()
 
         def chngProfilePic():
+            """
+            Changes the profile picture
+            Args:
+                None
+            Returns:
+                None
+            """
             path = self.uploadImage()
             if path:
                 self.cur.execute("UPDATE users SET imagePath=%s WHERE id=%s", (path, self.loggedInUser['id']))
@@ -662,56 +854,83 @@ class iPhoneStartupAnimation:
         tk.Button(frame, text="Logout", command=self.logout, bg="#FF6347", fg="white").pack(pady=5)
 
     def logout(self):
+        """
+        Logs out the user
+        Args:
+            None
+        Returns:
+            None
+        """
         self.loggedInUser = None
         self.showLoginScreen()
         
 
     def uploadImage(self) -> str:
-        """Uplad the image
+        """Upload the image
+        
+        Args:
+            None
 
         Returns:
-            filepath: The file path of the image
+            filepath (str): The file path of the image
         """
         filetypes = [('Image Files', '*.png *.jpg *.jpeg *.gif')]
         filepath = filedialog.askopenfilename(title='Choose Image', filetypes=filetypes)
         return filepath
 
     def showUploadTab(self) -> None:
-        """Show the upload section contents
         """
-        self.name_var = tk.StringVar()
-        self.desc_var = tk.StringVar()
-        self.score_var = tk.StringVar()
+        Show the upload section contents
+        Args:
+            None
+        Returns:
+            None
+        """
+        self.nameVar = tk.StringVar()
+        self.descriptionVar = tk.StringVar()
+        self.scoreVar = tk.StringVar()
         self.imagePath = ""
 
         tk.Label(self.mainContent, text="Clothing Name", font=("SF Pro", 14), bg=self.bgColor).pack(pady=5)
-        tk.Entry(self.mainContent, textvariable=self.name_var, font=("SF Pro", 12)).pack(pady=5, padx=20, fill=tk.X)
+        tk.Entry(self.mainContent, textvariable=self.nameVar, font=("SF Pro", 12)).pack(pady=5, padx=20, fill=tk.X)
 
         tk.Label(self.mainContent, text="Description", font=("SF Pro", 14), bg=self.bgColor).pack(pady=5)
-        tk.Entry(self.mainContent, textvariable=self.desc_var, font=("SF Pro", 12)).pack(pady=5, padx=20, fill=tk.X)
+        tk.Entry(self.mainContent, textvariable=self.descriptionVar, font=("SF Pro", 12)).pack(pady=5, padx=20, fill=tk.X)
 
         tk.Label(self.mainContent, text="Sustainability Score (1–10)", font=("SF Pro", 14), bg=self.bgColor).pack(pady=5)
-        ttk.Combobox(self.mainContent, textvariable=self.score_var, values=[str(i) for i in range(1, 11)]).pack(
+        ttk.Combobox(self.mainContent, textvariable=self.scoreVar, values=[str(i) for i in range(1, 11)]).pack(
             pady=5, padx=20, fill=tk.X)
 
         self.imageLabel = tk.Label(self.mainContent, text="No image selected", font=("SF Pro", 12), bg=self.bgColor,
                              fg="#888")
         self.imageLabel.pack(pady=5, padx=20, fill=tk.X)
 
-        def choose_img():
+        def chooseImage():
+            """
+            Choose the image to upload
+            Args:
+                None
+            Returns:
+                None
+            """
             self.imagePath = self.uploadImage()
             self.imageLabel.config(text=self.imagePath.split("/")[-1] if self.imagePath else "No image selected")
 
-        tk.Button(self.mainContent, text="Choose Image", command=choose_img).pack(pady=5)
+        tk.Button(self.mainContent, text="Choose Image", command=chooseImage).pack(pady=5)
         tk.Button(self.mainContent, text="Upload", command=self.saveToDB, bg=self.accentColor, fg="white").pack(pady=10)
 
     def saveToDB(self) -> None:
-        """Save the data to the database
         """
-        name = self.name_var.get()
-        desc = self.desc_var.get()
-        score = self.score_var.get()
-        imagePath = self.imagePath
+        Save the data to the database
+        Args:
+            None
+        Returns:
+            None
+        """
+        name = self.nameVar.get()
+        desc = self.descriptionVar.get()
+        score = self.scoreVar.get()
+        imagePath =  self.imagePath
 
         if not all([name, desc, score, imagePath]):
             print("All fields are required.")
@@ -728,7 +947,12 @@ class iPhoneStartupAnimation:
             print("Error saving:", e)
 
     def showSearchTab(self) -> None:
-        """Show the search tab contents
+        """
+        Show the search tab contents
+        Args:
+            None
+        Returns:
+            None
         """
         self.searchVariable = tk.StringVar()
         self.filterVariable = tk.StringVar()
@@ -748,7 +972,12 @@ class iPhoneStartupAnimation:
         self.resultsBox.pack(padx=20, pady=10, fill=tk.BOTH, expand=True)
 
     def searchFromDatabase(self) -> None:
-        """Search the database with the query
+        """
+        Search the database with the query
+        Args:
+            None
+        Returns:
+            None
         """
         self.resultsBox.delete(1.0, tk.END)
         name = self.searchVariable.get()
@@ -768,10 +997,9 @@ class iPhoneStartupAnimation:
             self.cur.execute(query, params)
             results = self.cur.fetchall()
             for item in results:
-                self.resultsBox.insert(tk.END, f"{item[1]} | {item[2]} | ⭐{item[3]}\n\n")
+                self.resultsBox.insert(tk.END, f"{item[1]} | {item[2]} | ⭐{item[3]}\n\n") # displays the results for each ote,
         except Exception as e:
             print("Search error:", e)
-
 
 #driver code
 if __name__ == "__main__":
